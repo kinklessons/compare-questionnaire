@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 
 // Import your question list
 
-import { questionSets } from "./questions";
+import questionSets from "./questions";
 const questions = questionSets["2.0"];
 function decodeAnswers(str) {
   try {
