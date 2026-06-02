@@ -358,4 +358,4 @@ const questionSets = {
   'Wooden paddles'
   ]
   };
-export default questions;
+export default questionSets;
