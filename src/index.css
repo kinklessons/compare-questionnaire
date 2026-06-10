@@ -260,3 +260,16 @@ code {
     @apply bg-background text-foreground;}
   html {
     @apply font-sans;}}
+
+.kink-header{
+    font-weight:700;
+    padding: 10px;
+}
+.kink-list{
+    text-align:left;
+    padding:10px;
+}
+.kink-text{
+    text-align:left;
+    padding:10px;
+}

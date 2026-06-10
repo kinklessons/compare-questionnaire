@@ -26,13 +26,15 @@ export default function CompareApp() {
 
   const results = useMemo(() => {
     if (!data1 || !data2) return null;
+    if (data1.version != data2.version) return null;
 
     const categories = {};
     const mutual = [];
     const conflicts = [];
 
     let overallTotal = 0;
-
+    const name_a = data1.name
+    const name_b = data2.name
     questionsV3.forEach((q) => {
       const a = Number(data1.answers?.[q.id] ?? 1);
       const b = Number(data2.answers?.[q.id] ?? 1);
@@ -119,6 +121,17 @@ export default function CompareApp() {
             />
           </CardContent>
         </Card>
+        <Card>
+          <CardContent className="p-6 space-y-4">
+          <ul class="kink-list">
+           <li> 1 - Hard Limit - absolulely not under any circumstances</li>
+           <li> 2 - Soft Limit - No desire to do this activity and but may permit if partner really wanted to do it </li>
+           <li> 3 - Willing do do this activity but has no special appeal to you </li>
+           <li> 4 - You like doing this activity and would like to experience it on a regular basis </li>
+           <li> 5 - Is a wild turn-on for you and you would like it as often as possible </li>
+         </ul>
+       </CardContent>
+        </Card>
 
         {results && (
           <>
@@ -173,7 +186,7 @@ export default function CompareApp() {
                         {item.Question}
                       </div>
                       <div className="text-sm text-slate-500">
-                        A: {item.scoreA} | B: {item.scoreB}
+                        {name_a}: {item.scoreA} | {name_b}: {item.scoreB}
                       </div>
                     </div>
                   ))}
@@ -225,7 +238,7 @@ export default function CompareApp() {
                             <div>{q.Question}</div>
 
                             <div className="text-sm">
-                              A:{q.scoreA} B:{q.scoreB} (
+                              {name_a}:{q.scoreA} {name_b}:{q.scoreB} (
                               {Math.round(q.similarity)}%)
                             </div>
                           </div>
