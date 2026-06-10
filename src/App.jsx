@@ -96,7 +96,7 @@ export default function CompareApp() {
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-slate-200 p-4 md:p-8">
       <div className="max-w-5xl mx-auto space-y-6">
         <div className="text-center">
-          <h1 className="text-4xl font-bold">
+          <h1 className="text-4xl font-bold"  style={{ color: "#000000" }}>
             Kink Questionnaire Comparison
           </h1>
           <p className="text-slate-600 mt-2">
@@ -135,7 +135,7 @@ export default function CompareApp() {
 
             <Card>
               <CardContent className="p-6">
-                <h2 className="text-2xl font-bold mb-4">
+                <h2 className="text-2xl font-bold mb-4"  style={{ color: "#000000" }}>
                   🔥 Mutual Interests ({results.mutual.length})
                 </h2>
 
@@ -159,7 +159,7 @@ export default function CompareApp() {
 
             <Card>
               <CardContent className="p-6">
-                <h2 className="text-2xl font-bold mb-4">
+                <h2 className="text-2xl font-bold mb-4"  style={{ color: "#000000" }}>
                   ⚠ Conflicts ({results.conflicts.length})
                 </h2>
 
@@ -183,7 +183,7 @@ export default function CompareApp() {
 
             <Card>
               <CardContent className="p-6">
-                <h2 className="text-2xl font-bold mb-4">
+                <h2 className="text-2xl font-bold mb-4"  style={{ color: "#000000" }}>
                   Category Compatibility
                 </h2>
 
