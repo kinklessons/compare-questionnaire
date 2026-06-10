@@ -186,7 +186,7 @@ export default function CompareApp() {
                         {item.Question}
                       </div>
                       <div className="text-sm text-slate-500">
-                        {name_a}: {item.scoreA} | {name_b}: {item.scoreB}
+                        A: {item.scoreA} | B: {item.scoreB}
                       </div>
                     </div>
                   ))}
@@ -238,7 +238,7 @@ export default function CompareApp() {
                             <div>{q.Question}</div>
 
                             <div className="text-sm">
-                              {name_a}:{q.scoreA} {name_b}:{q.scoreB} (
+                              A:{q.scoreA} B:{q.scoreB} (
                               {Math.round(q.similarity)}%)
                             </div>
                           </div>
