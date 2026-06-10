@@ -23,7 +23,9 @@ export default function CompareApp() {
 
   const data1 = useMemo(() => decodeSharedUrl(url1), [url1]);
   const data2 = useMemo(() => decodeSharedUrl(url2), [url2]);
+  const name1 = data1?.name?.trim() || "A";
 
+  const name2 = data2?.name?.trim() || "B";
   const results = useMemo(() => {
     if (!data1 || !data2) return null;
     if (data1.version != data2.version) return null;
@@ -33,8 +35,6 @@ export default function CompareApp() {
     const conflicts = [];
 
     let overallTotal = 0;
-    const name_a = data1.name
-    const name_b = data2.name
     questionsV3.forEach((q) => {
       const a = Number(data1.answers?.[q.id] ?? 1);
       const b = Number(data2.answers?.[q.id] ?? 1);
@@ -143,6 +143,9 @@ export default function CompareApp() {
                 <div className="text-5xl font-bold">
                   {results.overall}%
                 </div>
+                <div className="mt-2 text-slate-600">
+                  {name1} and {name2}
+                </div>
               </CardContent>
             </Card>
 
@@ -186,7 +189,7 @@ export default function CompareApp() {
                         {item.Question}
                       </div>
                       <div className="text-sm text-slate-500">
-                        A: {item.scoreA} | B: {item.scoreB}
+                        {name1}: {item.scoreA} | {name2}: {item.scoreB}
                       </div>
                     </div>
                   ))}
@@ -238,7 +241,7 @@ export default function CompareApp() {
                             <div>{q.Question}</div>
 
                             <div className="text-sm">
-                              A:{q.scoreA} B:{q.scoreB} (
+                              {name1}:{q.scoreA} {" | "} {name2}:{q.scoreB} (
                               {Math.round(q.similarity)}%)
                             </div>
                           </div>
