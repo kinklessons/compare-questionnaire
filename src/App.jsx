@@ -4,7 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChevronDown } from "lucide-react";
 import questionsV3 from "@/questionnaires/v3.json";
+import deleteList from "./questionnaires/delete.json";
 
+const deletedIds = new Set(
+  deleteList.map(item => item.id)
+);
+
+const filteredQuestions = questionsV3.filter(
+  q => !deletedIds.has(q.id)
+);
 function decodeSharedUrl(url) {
   try {
     const params = new URL(url).searchParams;
@@ -35,7 +43,7 @@ export default function CompareApp() {
     const conflicts = [];
 
     let overallTotal = 0;
-    questionsV3.forEach((q) => {
+    filteredQuestions.forEach((q) => {
       const a = Number(data1.answers?.[q.id] ?? 1);
       const b = Number(data2.answers?.[q.id] ?? 1);
 
@@ -80,7 +88,7 @@ export default function CompareApp() {
       .sort((a, b) => b.score - a.score);
 
     return {
-      overall: Math.round(overallTotal / questionsV3.length),
+      overall: Math.round(overallTotal / filteredQuestions.length),
       categoryResults,
       mutual,
       conflicts,
