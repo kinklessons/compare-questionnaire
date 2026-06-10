@@ -104,6 +104,20 @@ export default function CompareApp() {
           <p className="text-slate-600 mt-2">
             Compare two shared questionnaire URLs
           </p>
+          <p className="text-slate-600 mt-2">
+            If you have not completed a questionnaire, the button below can bring you to it.
+          </p>
+
+          <div className="flex justify-center my-6">
+          <Button
+          type="button"
+          className="bg-purple-600 hover:bg-purple-700 text-white"
+          onClick={() => window.open("https://kinklessons.github.io/kink-questionnaire/", "_blank")}
+          >
+           Questionnaire
+         </Button>
+</div>
+
         </div>
 
         <Card>
