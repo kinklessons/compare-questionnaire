@@ -1,362 +1,244 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ChevronDown } from "lucide-react";
+import questionsV3 from "@/questionnaires/v3.json";
 
-// Import your question list
-
-import questionSets from "./questions";
-const questions = questionSets["2.0"];
-function decodeAnswers(str) {
+function decodeSharedUrl(url) {
   try {
-    return JSON.parse(atob(str));
+    const params = new URL(url).searchParams;
+    const encoded = params.get("data");
+    if (!encoded) return null;
+    return JSON.parse(atob(encoded));
   } catch {
     return null;
   }
 }
 
-function getStatus(a, b) {
-  const diff = Math.abs(a - b);
+export default function CompareApp() {
+  const [url1, setUrl1] = useState("");
+  const [url2, setUrl2] = useState("");
+  const [openCategories, setOpenCategories] = useState({});
 
-  if (
-    (a === 1 && b >= 4) ||
-    (b === 1 && a >= 4)
-  ) {
-    return "Hard Limit";
-  }
+  const data1 = useMemo(() => decodeSharedUrl(url1), [url1]);
+  const data2 = useMemo(() => decodeSharedUrl(url2), [url2]);
 
-  if (diff <= 1) {
-    return "Match";
-  }
+  const results = useMemo(() => {
+    if (!data1 || !data2) return null;
 
-  if (diff === 2) {
-    return "Discuss";
-  }
+    const categories = {};
+    const mutual = [];
+    const conflicts = [];
 
-  return "Conflict";
-}
+    let overallTotal = 0;
 
-function buildComparison(personA, personB) {
-  const answersA = personA.answers || {};
-  const answersB = personB.answers || {};
+    questionsV3.forEach((q) => {
+      const a = Number(data1.answers?.[q.id] ?? 1);
+      const b = Number(data2.answers?.[q.id] ?? 1);
 
-  let totalScore = 0;
-  let count = 0;
+      const similarity = 100 - (Math.abs(a - b) / 4) * 100;
+      overallTotal += similarity;
 
-  const matches = [];
-  const discussions = [];
-  const conflicts = [];
-  const hardLimits = [];
-  const rows = [];
+      if (!categories[q.Category]) {
+        categories[q.Category] = {
+          questions: [],
+          total: 0,
+          count: 0,
+        };
+      }
 
-  Object.keys(answersA).forEach((key) => {
-    if (!(key in answersB)) return;
+      categories[q.Category].questions.push({
+        ...q,
+        scoreA: a,
+        scoreB: b,
+        similarity,
+      });
 
-    const index = Number(key.replace("q", ""));
+      categories[q.Category].total += similarity;
+      categories[q.Category].count++;
 
-    const a = Number(answersA[key]);
-    const b = Number(answersB[key]);
+      if (a >= 4 && b >= 4) {
+        mutual.push({ ...q, scoreA: a, scoreB: b });
+      }
 
-    const diff = Math.abs(a - b);
+      if ((a >= 4 && b <= 2) || (b >= 4 && a <= 2)) {
+        conflicts.push({ ...q, scoreA: a, scoreB: b });
+      }
+    });
 
-    totalScore += (4 - diff) / 4;
-    count++;
+    const categoryResults = Object.entries(categories)
+      .map(([name, data]) => ({
+        name,
+        score: Math.round(data.total / data.count),
+        questions: data.questions.sort(
+          (x, y) => y.similarity - x.similarity
+        ),
+      }))
+      .sort((a, b) => b.score - a.score);
 
-    const row = {
-      question: questionsv2[index] || key,
-      a,
-      b,
-      diff,
-      status: getStatus(a, b),
+    return {
+      overall: Math.round(overallTotal / questionsV3.length),
+      categoryResults,
+      mutual,
+      conflicts,
     };
+  }, [data1, data2]);
 
-    rows.push(row);
-
-    switch (row.status) {
-      case "Match":
-        matches.push(row);
-        break;
-
-      case "Discuss":
-        discussions.push(row);
-        break;
-
-      case "Conflict":
-        conflicts.push(row);
-        break;
-
-      case "Hard Limit":
-        hardLimits.push(row);
-        break;
-
-      default:
-        break;
-    }
-  });
-
-  const compatibility =
-    count > 0
-      ? Math.round((totalScore / count) * 100)
-      : 0;
-
-  return {
-    compatibility,
-    matches,
-    discussions,
-    conflicts,
-    hardLimits,
-    rows,
-  };
-}
-
-export default function App() {
-  const [urlA, setUrlA] = useState("");
-  const [urlB, setUrlB] = useState("");
-  const [error, setError] = useState("");
-  const [result, setResult] = useState(null);
-
-  const compare = () => {
-    setError("");
-
-    try {
-      const parsedA = new URL(urlA);
-      const parsedB = new URL(urlB);
-
-      const dataA = parsedA.searchParams.get("data");
-      const dataB = parsedB.searchParams.get("data");
-
-      if (!dataA || !dataB) {
-        setError("One or both URLs do not contain questionnaire data.");
-        return;
-      }
-
-      const personA = decodeAnswers(dataA);
-      const personB = decodeAnswers(dataB);
-
-      if (!personA || !personB) {
-        setError("Unable to decode one of the questionnaires.");
-        return;
-      }
-
-      if (personA.version !== personB.version) {
-        setError(
-          `Version mismatch: ${personA.version} vs ${personB.version}`
-        );
-        return;
-      }
-
-      setResult(buildComparison(personA, personB));
-    } catch {
-      setError("Invalid URL entered.");
-    }
+  const toggleCategory = (category) => {
+    setOpenCategories((prev) => ({
+      ...prev,
+      [category]: !prev[category],
+    }));
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-slate-200 p-4 md:p-8">
+      <div className="max-w-5xl mx-auto space-y-6">
         <div className="text-center">
           <h1 className="text-4xl font-bold">
-            Kink Compatibility Comparison
+            Kink Questionnaire Comparison
           </h1>
-
           <p className="text-slate-600 mt-2">
-            Compare two questionnaire results
+            Compare two shared questionnaire URLs
           </p>
         </div>
 
         <Card>
           <CardContent className="p-6 space-y-4">
+            <Input
+              placeholder="First shared URL"
+              value={url1}
+              onChange={(e) => setUrl1(e.target.value)}
+            />
 
-            <div>
-              <label className="font-medium">
-                Partner A URL
-              </label>
-
-              <Input
-                value={urlA}
-                onChange={(e) =>
-                  setUrlA(e.target.value)
-                }
-                placeholder="Paste Partner A questionnaire URL"
-              />
-            </div>
-
-            <div>
-              <label className="font-medium">
-                Partner B URL
-              </label>
-
-              <Input
-                value={urlB}
-                onChange={(e) =>
-                  setUrlB(e.target.value)
-                }
-                placeholder="Paste Partner B questionnaire URL"
-              />
-            </div>
-
-            <Button
-              onClick={compare}
-              className="w-full"
-            >
-              Compare Results
-            </Button>
-
-            {error && (
-              <div className="text-red-600">
-                {error}
-              </div>
-            )}
+            <Input
+              placeholder="Second shared URL"
+              value={url2}
+              onChange={(e) => setUrl2(e.target.value)}
+            />
           </CardContent>
         </Card>
 
-        {result && (
+        {results && (
           <>
             <Card>
               <CardContent className="p-6">
-                <div className="text-center">
-                  <div className="text-sm text-slate-500">
-                    Compatibility Score
-                  </div>
-
-                  <div className="text-6xl font-bold">
-                    {result.compatibility}%
-                  </div>
+                <div className="text-sm text-slate-600">
+                  Overall Compatibility
+                </div>
+                <div className="text-5xl font-bold">
+                  {results.overall}%
                 </div>
               </CardContent>
             </Card>
 
-            <div className="grid md:grid-cols-2 gap-6">
-
-              <Card>
-                <CardContent className="p-6">
-                  <h2 className="font-bold text-xl mb-4">
-                    Shared Interests
-                  </h2>
-
-                  <ul className="space-y-2">
-                    {result.matches.map((item) => (
-                      <li key={item.question}>
-                        {item.question}
-                        {" "}
-                        ({item.a}/{item.b})
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <h2 className="font-bold text-xl mb-4">
-                    Discussion Areas
-                  </h2>
-
-                  <ul className="space-y-2">
-                    {result.discussions.map((item) => (
-                      <li key={item.question}>
-                        {item.question}
-                        {" "}
-                        ({item.a}/{item.b})
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <h2 className="font-bold text-xl mb-4 text-red-600">
-                    Hard Limits
-                  </h2>
-
-                  <ul className="space-y-2">
-                    {result.hardLimits.map((item) => (
-                      <li key={item.question}>
-                        {item.question}
-                        {" "}
-                        ({item.a}/{item.b})
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <h2 className="font-bold text-xl mb-4">
-                    Conflicts
-                  </h2>
-
-                  <ul className="space-y-2">
-                    {result.conflicts.map((item) => (
-                      <li key={item.question}>
-                        {item.question}
-                        {" "}
-                        ({item.a}/{item.b})
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-
-            </div>
-
             <Card>
-              <CardContent className="p-6 overflow-x-auto">
-                <h2 className="font-bold text-xl mb-4">
-                  Full Comparison
+              <CardContent className="p-6">
+                <h2 className="text-2xl font-bold mb-4">
+                  🔥 Mutual Interests ({results.mutual.length})
                 </h2>
 
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left p-2">
-                        Question
-                      </th>
-                      <th className="p-2">
-                        A
-                      </th>
-                      <th className="p-2">
-                        B
-                      </th>
-                      <th className="p-2">
-                        Status
-                      </th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {result.rows.map((row) => (
-                      <tr
-                        key={row.question}
-                        className="border-b"
-                      >
-                        <td className="p-2">
-                          {row.question}
-                        </td>
-
-                        <td className="text-center">
-                          {row.a}
-                        </td>
-
-                        <td className="text-center">
-                          {row.b}
-                        </td>
-
-                        <td className="text-center">
-                          {row.status}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-
-                </table>
+                <div className="space-y-2">
+                  {results.mutual.map((item) => (
+                    <div
+                      key={item.id}
+                      className="border-b pb-2"
+                    >
+                      <div className="font-medium">
+                        {item.Question}
+                      </div>
+                      <div className="text-sm text-slate-500">
+                        {item.Category}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
 
+            <Card>
+              <CardContent className="p-6">
+                <h2 className="text-2xl font-bold mb-4">
+                  ⚠ Conflicts ({results.conflicts.length})
+                </h2>
+
+                <div className="space-y-2">
+                  {results.conflicts.map((item) => (
+                    <div
+                      key={item.id}
+                      className="border-b pb-2"
+                    >
+                      <div className="font-medium">
+                        {item.Question}
+                      </div>
+                      <div className="text-sm text-slate-500">
+                        A: {item.scoreA} | B: {item.scoreB}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <h2 className="text-2xl font-bold mb-4">
+                  Category Compatibility
+                </h2>
+
+                {results.categoryResults.map((category) => (
+                  <div
+                    key={category.name}
+                    className="mb-4 border rounded-xl"
+                  >
+                    <button
+                      className="w-full flex items-center justify-between p-4"
+                      onClick={() =>
+                        toggleCategory(category.name)
+                      }
+                    >
+                      <div className="font-bold">
+                        {category.name}
+                      </div>
+
+                      <div className="flex items-center gap-4">
+                        <span>{category.score}%</span>
+
+                        <ChevronDown
+                          className={`transition-transform ${
+                            openCategories[category.name]
+                              ? "rotate-180"
+                              : ""
+                          }`}
+                        />
+                      </div>
+                    </button>
+
+                    {openCategories[category.name] && (
+                      <div className="p-4 border-t space-y-2">
+                        {category.questions.map((q) => (
+                          <div
+                            key={q.id}
+                            className="flex justify-between border-b pb-2"
+                          >
+                            <div>{q.Question}</div>
+
+                            <div className="text-sm">
+                              A:{q.scoreA} B:{q.scoreB} (
+                              {Math.round(q.similarity)}%)
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
           </>
         )}
       </div>
     </div>
   );
 }
-
