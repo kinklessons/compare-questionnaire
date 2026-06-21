@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { ChevronDown } from "lucide-react";
 import questionsV3 from "@/questionnaires/v3.json";
 import deleteList from "./questionnaires/delete.json";
+import logo from "@/assets/kinklessons-logo.png";
 
 const deletedIds = new Set(
   deleteList.map(item => item.id)
@@ -106,6 +107,12 @@ export default function CompareApp() {
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-slate-200 p-4 md:p-8">
       <div className="max-w-5xl mx-auto space-y-6">
         <div className="text-center">
+          <div className="p-6 max-w-3xl mx-auto">
+          <div className="flex justify-center items-center gap-3 p-4">
+           <img src={logo} alt="KinkLessons" className="h-6 w-6 rounded-full" style={{ width: "200px", height: "200px" }} />
+         </div>
+         </div>
+
           <h1 className="text-4xl font-bold"  style={{ color: "#000000" }}>
             Kink Questionnaire Comparison
           </h1>
