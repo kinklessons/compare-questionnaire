@@ -109,7 +109,7 @@ export default function CompareApp() {
         <div className="text-center">
           <div className="p-6 max-w-3xl mx-auto">
           <div className="flex justify-center items-center gap-3 p-4">
-           <img src={logo} alt="KinkLessons" className="h-6 w-6 rounded-full" style={{ width: "200px", height: "200px" }} />
+      <a href="https://kinklessons.com"><img src={logo} alt="KinkLessons" className="h-6 w-6 rounded-full" style={{ width: "200px", height: "200px" }} /></a>
          </div>
          </div>
 
